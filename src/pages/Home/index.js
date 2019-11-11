@@ -1,84 +1,98 @@
 import React from 'react';
 import { MdAddShoppingCart } from 'react-icons/md';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import PropTypes from 'prop-types';
+
+import api from '../../services/api';
+import { formatPrice } from '../../util/format';
+import * as CartActions from '../../store/modules/cart/actions';
 
 import { ProductList } from './styles';
-import tenisImage from '../../assets/images/sample_tenis.jpg';
 
-export default function Home() {
-  return (
-    <ProductList>
-      <li>
-        <img src={tenisImage} alt="Tênis" />
-        <strong>Tênis Nike Shox Nz Eu Masculino - Preto</strong>
-        <span>R$ 409,99</span>
+class Home extends React.Component {
+  constructor(props) {
+    super(props);
 
-        <button type="button">
-          <div>
-            <MdAddShoppingCart size={16} color="#fff" /> 3
-          </div>
-          <span>ADICIONAR AO CARRINHO</span>
-        </button>
-      </li>
-      <li>
-        <img src={tenisImage} alt="Tênis" />
-        <strong>Tênis Nike Shox Nz Eu Masculino - Preto</strong>
-        <span>R$ 409,99</span>
+    this.state = {
+      products: [],
+      loading: false,
+      error: '',
+    };
+  }
 
-        <button type="button">
-          <div>
-            <MdAddShoppingCart size={16} color="#fff" /> 3
-          </div>
-          <span>ADICIONAR AO CARRINHO</span>
-        </button>
-      </li>
-      <li>
-        <img src={tenisImage} alt="Tênis" />
-        <strong>Tênis Nike Shox Nz Eu Masculino - Preto</strong>
-        <span>R$ 409,99</span>
+  async componentDidMount() {
+    this.setState({ loading: true });
+    try {
+      const response = await api.get('/products');
+      const data = response.data.map(product => ({
+        ...product,
+        formattedPrice: formatPrice(product.price),
+      }));
+      this.setState({
+        products: data,
+        loading: false,
+      });
+    } catch (err) {
+      this.setState({
+        loading: false,
+        error: err.message,
+      });
+    }
+  }
 
-        <button type="button">
-          <div>
-            <MdAddShoppingCart size={16} color="#fff" /> 3
-          </div>
-          <span>ADICIONAR AO CARRINHO</span>
-        </button>
-      </li>
-      <li>
-        <img src={tenisImage} alt="Tênis" />
-        <strong>Tênis Nike Shox Nz Eu Masculino - Preto</strong>
-        <span>R$ 409,99</span>
+  handleAddProduct = product => {
+    const { addToCart } = this.props;
 
-        <button type="button">
-          <div>
-            <MdAddShoppingCart size={16} color="#fff" /> 3
-          </div>
-          <span>ADICIONAR AO CARRINHO</span>
-        </button>
-      </li>
-      <li>
-        <img src={tenisImage} alt="Tênis" />
-        <strong>Tênis Nike Shox Nz Eu Masculino - Preto</strong>
-        <span>R$ 409,99</span>
+    addToCart(product);
+  };
 
-        <button type="button">
-          <div>
-            <MdAddShoppingCart size={16} color="#fff" /> 3
-          </div>
-          <span>ADICIONAR AO CARRINHO</span>
-        </button>
-      </li>
-      <li>
-        <img src={tenisImage} alt="Tênis" />
-        <strong>Tênis Nike Shox Nz Eu Masculino - Preto</strong>
-        <span>R$ 409,99</span>
+  render() {
+    const { products, loading, error } = this.state;
+    const { amountById } = this.props;
 
-        <button type="button">
-          <div>
-            <MdAddShoppingCart size={16} color="#fff" /> 3
-          </div>
-          <span>ADICIONAR AO CARRINHO</span>
-        </button>
-      </li>
-    </ProductList>
-  );
+    return (
+      <ProductList>
+        {loading && 'Loading'}
+        {error !== '' && error}
+        {products.map(product => (
+          <li key={String(product.id)}>
+            <img src={product.image} alt="Tênis" />
+            <strong>{product.title}</strong>
+            <span>{product.formattedPrice}</span>
+
+            <button
+              type="button"
+              onClick={() => this.handleAddProduct(product)}
+            >
+              <div>
+                <MdAddShoppingCart size={16} color="#fff" />
+                {amountById[product.id] || 0}
+              </div>
+              <span>ADICIONAR AO CARRINHO</span>
+            </button>
+          </li>
+        ))}
+      </ProductList>
+    );
+  }
 }
+
+Home.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+};
+
+const mapStateToProps = state => ({
+  amountById: state.cart.reduce((amountById, product) => {
+    amountById[product.id] = product.amount;
+    return amountById;
+  }, {}),
+});
+
+const mapDispatchToProps = dispatch =>
+  bindActionCreators(CartActions, dispatch);
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Home);
