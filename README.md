@@ -1,3 +1,8 @@
+# Rocketshoes
+<div style="margin: 0 auto; display: flex; align-itens: center; justify-contents: center;">
+<img src="https://raw.githubusercontent.com/allanmaral/Rocketseat-desafio-07/master/src/assets/images/Logo.svg" alt="Log Rocketshoes" style="background-color: #000; padding: 20px; border-radius: 10px"/>
+</div>
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
