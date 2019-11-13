@@ -2,7 +2,6 @@ import React from 'react';
 import { MdAddShoppingCart } from 'react-icons/md';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import PropTypes from 'prop-types';
 
 import api from '../../services/api';
 import { formatPrice } from '../../util/format';
