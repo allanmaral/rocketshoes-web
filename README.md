@@ -21,18 +21,11 @@ Para executar a aplicação, é necessário que se tenha o [Node](https://nodejs
 
 Após clonar o repositório, execute:
 ```sh
+yarn install
 yarn start
-```
-ou
-```sh
-npm run start
 ```
 
 O para simular uma API REST, este projeto utiliza o arquivo [server.json](https://raw.githubusercontent.com/allanmaral/Rocketseat-desafio-07/master/server.json) em conjunto com a ferramenta [json-server](https://github.com/typicode/json-server). Para iniciar o json-server, execute:
 ```sh
 yarn json-server
-```
-ou
-```sh
-npm run json-server
 ```
