@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MdAddShoppingCart } from 'react-icons/md';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import api from '../../services/api';
 import { formatPrice } from '../../util/format';
@@ -9,85 +8,65 @@ import * as CartActions from '../../store/modules/cart/actions';
 
 import { ProductList } from './styles';
 
-class Home extends React.Component {
-  constructor(props) {
-    super(props);
+function Home() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const amountById = useSelector(state =>
+    state.cart.reduce((amount, product) => {
+      amount[product.id] = product.amount;
+      return amount;
+    }, {})
+  );
+  const dispatch = useDispatch();
 
-    this.state = {
-      products: [],
-      loading: false,
-      error: '',
-    };
-  }
-
-  async componentDidMount() {
-    this.setState({ loading: true });
-    try {
-      const response = await api.get('/products');
-      const data = response.data.map(product => ({
-        ...product,
-        formattedPrice: formatPrice(product.price),
-      }));
-      this.setState({
-        products: data,
-        loading: false,
-      });
-    } catch (err) {
-      this.setState({
-        loading: false,
-        error: err.message,
-      });
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        const response = await api.get('/products');
+        const data = response.data.map(product => ({
+          ...product,
+          formattedPrice: formatPrice(product.price),
+        }));
+        setProducts(data);
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        setError(err.message);
+      }
     }
-  }
+    loadProducts();
+  }, []);
 
-  handleAddProduct = productId => {
-    const { addToCartRequest } = this.props;
+  const handleAddProduct = useCallback(
+    productId => {
+      dispatch(CartActions.addToCartRequest(productId));
+    },
+    [dispatch]
+  );
 
-    addToCartRequest(productId);
-  };
+  return (
+    <ProductList>
+      {loading && 'Loading'}
+      {error !== '' && error}
+      {products.map(product => (
+        <li key={String(product.id)}>
+          <img src={product.image} alt="Tênis" />
+          <strong>{product.title}</strong>
+          <span>{product.formattedPrice}</span>
 
-  render() {
-    const { products, loading, error } = this.state;
-    const { amountById } = this.props;
-
-    return (
-      <ProductList>
-        {loading && 'Loading'}
-        {error !== '' && error}
-        {products.map(product => (
-          <li key={String(product.id)}>
-            <img src={product.image} alt="Tênis" />
-            <strong>{product.title}</strong>
-            <span>{product.formattedPrice}</span>
-
-            <button
-              type="button"
-              onClick={() => this.handleAddProduct(product.id)}
-            >
-              <div>
-                <MdAddShoppingCart size={16} color="#fff" />
-                {amountById[product.id] || 0}
-              </div>
-              <span>ADICIONAR AO CARRINHO</span>
-            </button>
-          </li>
-        ))}
-      </ProductList>
-    );
-  }
+          <button type="button" onClick={() => handleAddProduct(product.id)}>
+            <div>
+              <MdAddShoppingCart size={16} color="#fff" />
+              {amountById[product.id] || 0}
+            </div>
+            <span>ADICIONAR AO CARRINHO</span>
+          </button>
+        </li>
+      ))}
+    </ProductList>
+  );
 }
 
-const mapStateToProps = state => ({
-  amountById: state.cart.reduce((amountById, product) => {
-    amountById[product.id] = product.amount;
-    return amountById;
-  }, {}),
-});
-
-const mapDispatchToProps = dispatch =>
-  bindActionCreators(CartActions, dispatch);
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Home);
+export default Home;

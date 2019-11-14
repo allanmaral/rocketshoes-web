@@ -1,6 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   MdRemoveCircleOutline,
   MdAddCircleOutline,
@@ -12,13 +11,30 @@ import { formatPrice } from '../../util/format';
 
 import { Container, ProductTable, Total } from './styles';
 
-function Cart({ cart, total, removeFromCart, updateAmountRequest }) {
+function Cart() {
+  const cart = useSelector(state =>
+    state.cart.map(product => ({
+      ...product,
+      formattedSubtotal: formatPrice(product.amount * product.price),
+    }))
+  );
+
+  const total = useSelector(state =>
+    formatPrice(
+      state.cart.reduce((_total, product) => {
+        return _total + product.amount * product.price;
+      }, 0)
+    )
+  );
+
+  const dispatch = useDispatch();
+
   function increment(product) {
-    updateAmountRequest(product.id, product.amount + 1);
+    dispatch(CartActions.updateAmountRequest(product.id, product.amount + 1));
   }
 
   function decrement(product) {
-    updateAmountRequest(product.id, product.amount - 1);
+    dispatch(CartActions.updateAmountRequest(product.id, product.amount - 1));
   }
 
   return (
@@ -58,7 +74,10 @@ function Cart({ cart, total, removeFromCart, updateAmountRequest }) {
                 <strong>{item.formattedSubtotal}</strong>
               </td>
               <td>
-                <button type="button" onClick={() => removeFromCart(item.id)}>
+                <button
+                  type="button"
+                  onClick={() => dispatch(CartActions.removeFromCart(item.id))}
+                >
                   <MdDelete size={20} color="#7159c1" />
                 </button>
               </td>
@@ -79,22 +98,4 @@ function Cart({ cart, total, removeFromCart, updateAmountRequest }) {
   );
 }
 
-const mapDispatchToProps = dispatch =>
-  bindActionCreators(CartActions, dispatch);
-
-const mapStateToProps = state => ({
-  cart: state.cart.map(product => ({
-    ...product,
-    formattedSubtotal: formatPrice(product.amount * product.price),
-  })),
-  total: formatPrice(
-    state.cart.reduce((total, product) => {
-      return total + product.amount * product.price;
-    }, 0)
-  ),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Cart);
+export default Cart;
